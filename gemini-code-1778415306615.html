@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neuro-Focus | Impulse Control</title>
+    <style>
+        :root {
+            --main-color: #6366f1;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            background: var(--card-bg);
+            max-width: 450px;
+            width: 90%;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .label {
+            color: var(--main-color);
+            font-weight: 800;
+            font-size: 13px;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        h1 { font-size: 24px; margin-bottom: 20px; }
+
+        /* 지시어 스타일 */
+        #instruction {
+            font-size: 32px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            height: 45px;
+        }
+        .match { color: var(--main-color); }
+        .anti { color: #f59e0b; }
+
+        /* 화살표 박스 */
+        #arrow-box {
+            font-size: 80px;
+            margin: 30px 0;
+            background: #f1f5f9;
+            padding: 40px;
+            border-radius: 20px;
+            line-height: 1;
+        }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .dir-btn {
+            background: #1e293b;
+            color: white;
+            border: none;
+            padding: 20px;
+            border-radius: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .dir-btn:hover { background: #334155; transform: translateY(-2px); }
+        .dir-btn:active { transform: translateY(0); }
+
+        #feedback {
+            height: 25px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .btn-start {
+            background: var(--main-color);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 700;
+            width: 100%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="label">Impulse Control Test</div>
+    <h1>청개구리 방향 통제</h1>
+    
+    <div id="game-ui" style="display: none;">
+        <div id="instruction">준비</div>
+        <div id="arrow-box">?</div>
+        
+        <div class="btn-group">
+            <button class="dir-btn" onclick="handleBtn('left')">◀ 왼쪽</button>
+            <button class="dir-btn" onclick="handleBtn('right')">오른쪽 ▶</button>
+        </div>
+        <div id="feedback"></div>
+        <p style="font-size: 12px; color: #94a3b8; margin-top: 15px;">진행도: <span id="progress">0</span> / 10</p>
+    </div>
+
+    <div id="start-ui">
+        <p style="color: #64748b; margin-bottom: 25px; line-height: 1.6;">
+            <strong>[규칙]</strong><br>
+            '일치'가 뜨면 화살표 방향대로,<br>
+            '반대'가 뜨면 화살표 반대 방향을 누르세요!
+        </p>
+        <button class="btn-start" onclick="startGame()">테스트 시작</button>
+    </div>
+</div>
+
+<script>
+    let score = 0;
+    let currentRound = 0;
+    const totalRounds = 10;
+    let currentTargetDir = ""; // 실제 눌러야 하는 방향
+    let isGameOver = false;
+
+    function startGame() {
+        document.getElementById('start-ui').style.display = 'none';
+        document.getElementById('game-ui').style.display = 'block';
+        nextRound();
+    }
+
+    function nextRound() {
+        if (currentRound >= totalRounds) {
+            finishGame();
+            return;
+        }
+
+        const arrowBox = document.getElementById('arrow-box');
+        const instBox = document.getElementById('instruction');
+        const feedback = document.getElementById('feedback');
+        
+        feedback.innerText = "";
+        
+        // 1. 방향 결정 (0: 왼쪽, 1: 오른쪽)
+        const arrowDir = Math.random() > 0.5 ? "left" : "right";
+        arrowBox.innerText = arrowDir === "left" ? "◀" : "▶";
+
+        // 2. 모드 결정 (0: 일치, 1: 반대)
+        const isAnti = Math.random() > 0.5;
+        if (isAnti) {
+            instBox.innerText = "반대";
+            instBox.className = "anti";
+            currentTargetDir = arrowDir === "left" ? "right" : "left";
+        } else {
+            instBox.innerText = "일치";
+            instBox.className = "match";
+            currentTargetDir = arrowDir;
+        }
+
+        document.getElementById('progress').innerText = currentRound;
+    }
+
+    function handleBtn(clickedDir) {
+        if (isGameOver) return;
+
+        const feedback = document.getElementById('feedback');
+        
+        if (clickedDir === currentTargetDir) {
+            feedback.innerText = "✅ 정확합니다!";
+            feedback.style.color = "var(--success)";
+            score++;
+        } else {
+            feedback.innerText = "❌ 판단 오류!";
+            feedback.style.color = "var(--error)";
+        }
+
+        currentRound++;
+        
+        // 아주 짧은 대기 후 다음 라운드
+        setTimeout(nextRound, 600);
+    }
+
+    function finishGame() {
+        isGameOver = true;
+        const container = document.querySelector('.container');
+        container.innerHTML = `
+            <div class="label">Test Completed</div>
+            <h1>트레이닝 완료</h1>
+            <div style="font-size: 40px; font-weight: 800; color: var(--main-color); margin: 20px 0;">${score * 10}점</div>
+            <p style="color: #64748b; line-height: 1.6;">총 10회 중 ${score}회 성공했습니다.<br>당신의 판단 데이터가 기록되었습니다.</p>
+            <button class="btn-start" onclick="location.reload()" style="background:#f1f5f9; color:#64748b; margin-top:25px;">다시 시도</button>
+        `;
+    }
+</script>
+
+</body>
+</html>
